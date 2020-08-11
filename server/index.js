@@ -7,7 +7,6 @@ class SnapdropServer {
         const WebSocket = require('ws');
         this._wss = new WebSocket.Server({ port: port });
         this._wss.on('connection', (socket, request) => this._onConnection(new Peer(socket, request)));
-        this._wss.on('headers', (headers, response) => this._onHeaders(headers, response));
 
         this._rooms = {};
 
@@ -21,12 +20,6 @@ class SnapdropServer {
 
         // send displayName
         this._send(peer, { type: 'displayName', message: peer.name.displayName });
-    }
-
-    _onHeaders(headers, response) {
-        if (response.headers.cookie && response.headers.cookie.indexOf('peerid=') > -1) return;
-        response.peerId = Peer.uuid();
-        headers.push('Set-Cookie: peerid=' + response.peerId + "; SameSite=Strict; Secure");
     }
 
     _onMessage(sender, message) {
@@ -174,11 +167,7 @@ class Peer {
     }
 
     _setPeerId(request) {
-        if (request.peerId) {
-            this.id = request.peerId;
-        } else {
-            this.id = request.headers.cookie.replace('peerid=', '');
-        }
+        this.id = Peer.uuid();
     }
 
     toString() {
